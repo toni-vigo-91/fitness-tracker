@@ -8,9 +8,7 @@ import {
   actualizarMedida,
   eliminarMedida,
   obtenerUltimaMedida,
-  obtenerMedidasPorFecha,
-  calcularCambioOfPeso,
-  obtenerEvolucionPeso,
+  obtenerProgresoPeso,
 } from '@/lib/db/medidas';
 
 export function useMedidas() {
@@ -100,21 +98,12 @@ export function useMedidas() {
     }
   }, []);
 
-  const obtenerCambio = useCallback(async () => {
+  const obtenerProgreso = useCallback(async () => {
     try {
-      return await calcularCambioOfPeso();
+      return await obtenerProgresoPeso();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error');
-      return null;
-    }
-  }, []);
-
-  const obtenerEvolucion = useCallback(async (ultimas: number = 10) => {
-    try {
-      return await obtenerEvolucionPeso(ultimas);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error');
-      return [];
+      return { inicial: null, actual: null, diferencia: null };
     }
   }, []);
 
@@ -131,7 +120,6 @@ export function useMedidas() {
     actualizar,
     eliminar,
     obtenerUltima,
-    obtenerCambio,
-    obtenerEvolucion,
+    obtenerProgreso,
   };
 }
