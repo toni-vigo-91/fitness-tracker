@@ -10,8 +10,18 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Fitness Tracker - Tu evolución en entrenamientos',
-  description: 'Aplicación para registrar entrenamientos, medidas corporales y seguir tu progreso',
+  description: 'Aplicación gratuita para registrar entrenamientos, medidas corporales y seguir tu progreso. Funciona completamente offline con datos almacenados localmente.',
+  keywords: ['fitness', 'entrenamientos', 'progreso', 'pesas', 'gym', 'ejercicios'],
+  authors: [{ name: 'Toni' }],
+  creator: 'Toni',
   manifest: '/manifest.json',
+  robots: 'index, follow',
+  openGraph: {
+    title: 'Fitness Tracker',
+    description: 'Tu asistente personal para entrenamientos y seguimiento de progreso',
+    type: 'website',
+    locale: 'es_ES',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

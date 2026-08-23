@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fitness Tracker
 
-## Getting Started
+Una aplicación web progresiva (PWA) para rastrear tu evolución en entrenamientos, medidas corporales y Personal Records (PRs).
 
-First, run the development server:
+## Características
+
+- ✅ **Completamente Offline**: Todos los datos se guardan localmente en tu dispositivo
+- ✅ **PWA Instalable**: Instálala como app nativa en tu teléfono o computadora
+- ✅ **Sin Servidor**: No requiere conexión a Internet
+- ✅ **Privacidad Total**: Tus datos nunca se envían a ningún servidor
+- ✅ **Seguimiento de PRs**: Visualiza tu progreso en cada ejercicio
+- ✅ **Gráficos de Progresión**: Observa tu evolución con gráficas detalladas
+- ✅ **Rutinas Predefinidas**: 4 rutinas (Upper A/B, Lower A/B) con 32 ejercicios
+- ✅ **Medidas Corporales**: Registra peso, medidas y porcentaje de grasa
+
+## Tecnologías
+
+- **Frontend**: Next.js 16.3.2 + TypeScript + Tailwind CSS 4
+- **Base de Datos**: IndexedDB (Local)
+- **Gráficos**: Recharts
+- **PWA**: next-pwa
+- **UUIDs**: uuid
+
+## Primeros Pasos
+
+### Instalación
 
 ```bash
+# Clonar repositorio
+git clone <repo-url>
+cd fitness-tracker
+
+# Instalar dependencias
+npm install
+
+# Ejecutar en desarrollo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Instalación como App
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Abre la app en tu navegador
+2. Presiona el botón "Instalar" (aparece en la parte superior)
+3. La app se instalará como app nativa en tu dispositivo
 
-## Learn More
+## Uso
 
-To learn more about Next.js, take a look at the following resources:
+### Dashboard
+- Visualiza tus estadísticas principales
+- Gráficos de frecuencia de entrenamientos
+- Ejercicios más frecuentes
+- Resumen semanal
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Entrenamientos
+- Selecciona una rutina
+- Registra series, peso y repeticiones
+- Temporizador de descanso automático
+- Historial completo con filtros
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Ejercicios
+- Biblioteca de 32 ejercicios predefinidos
+- Busca y filtra por grupo muscular
+- Crea ejercicios personalizados
 
-## Deploy on Vercel
+### PRs (Personal Records)
+- Visualiza tus mejores marcas
+- Gráficos de progresión por ejercicio
+- Historial de PRs
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Medidas
+- Registra peso, medidas corporales
+- Gráficos de evolución
+- Seguimiento histórico
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Perfil
+- Gestiona tu información personal
+- Preferencias de la app (unidades, idioma)
+- Exporta tus datos en JSON
+- Información de privacidad
+
+## Datos Personales
+
+**IMPORTANTE**: Todos tus datos se almacenan localmente en tu dispositivo. No se envía ninguna información a servidores externos.
+
+- Los datos se guardan en IndexedDB (base de datos del navegador)
+- Para sincronizar entre dispositivos, exporta tus datos (JSON) desde Perfil
+- Elimina la app para borrar todos tus datos
+
+## Estructura del Proyecto
