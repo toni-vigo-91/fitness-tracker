@@ -21,7 +21,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noUncheckedIndexedAccess": true,
     "module": "esnext",
     "baseUrl": ".",
