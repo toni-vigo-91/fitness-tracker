@@ -6,6 +6,9 @@ import { Entrenamiento, MedidaCorporal } from '@/lib/tipos';
 import { obtenerUltimoEntrenamiento } from '@/lib/db/entrenamientos';
 import { obtenerUltimaMedida } from '@/lib/db/medidas';
 import VerificacionSeed from '@/components/ui/VerificacionSeed';
+import GraficoFrecuenciaEntrenamientos from '@/components/dashboard/GraficoFrecuenciaEntrenamientos';
+import EjerciciosMasFrecuentes from '@/components/dashboard/EjerciciosMasFrecuentes';
+import ResumenSemanal from '@/components/dashboard/ResumenSemanal';
 
 export default function Dashboard() {
   const [ultimoEntrenamiento, setUltimoEntrenamiento] = useState<Entrenamiento | null>(null);
@@ -27,7 +30,8 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-4xl font-bold mb-2">Fitness Tracker</h1>
         <p className="text-slate-400">Tu evolucion hacia tus objetivos</p>
@@ -35,6 +39,7 @@ export default function Dashboard() {
 
       <VerificacionSeed />
 
+      {/* Cards principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/entrenamientos" className="card hover:bg-slate-700 transition-colors group cursor-pointer">
           <p className="text-slate-400 text-sm mb-2">Ultimo entrenamiento</p>
@@ -89,6 +94,7 @@ export default function Dashboard() {
         </Link>
       </div>
 
+      {/* Acciones rapidas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link href="/entrenamientos/nuevo" className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-4 px-6 rounded-lg text-center transition-all">
           Nuevo entrenamiento
@@ -99,6 +105,21 @@ export default function Dashboard() {
         </Link>
       </div>
 
+      {/* Graficos y estadisticas */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Grafico grande */}
+        <div className="lg:col-span-2">
+          <GraficoFrecuenciaEntrenamientos />
+        </div>
+
+        {/* Sidebar derecho */}
+        <div className="space-y-6">
+          <ResumenSemanal />
+          <EjerciciosMasFrecuentes />
+        </div>
+      </div>
+
+      {/* Info general */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card bg-slate-800/50">
           <p className="text-slate-400 text-xs mb-2">DATOS RAPIDOS</p>
