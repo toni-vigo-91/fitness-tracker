@@ -2,53 +2,44 @@ import { v4 as uuidv4 } from 'uuid';
 import { MedidaCorporal } from '../tipos';
 import { getDB } from './init';
 
-// Crear medida corporal
 export async function crearMedida(
   medida: Omit<MedidaCorporal, 'id' | 'creado_en'>
 ): Promise<MedidaCorporal> {
   const db = await getDB();
-  
+
   const nuevaMedida: MedidaCorporal = {
     ...medida,
     id: uuidv4(),
     creado_en: new Date(),
   };
 
-  await db.add('medidas', nuevaMedida);
+  await db.add('medidas', nuevaMedida as any);
   return nuevaMedida;
 }
 
-// Obtener una medida
 export async function obtenerMedida(id: string): Promise<MedidaCorporal | undefined> {
   const db = await getDB();
-  return db.get('medidas', id);
+  return db.get('medidas', id) as any;
 }
 
-// Obtener todas las medidas
 export async function obtenerTodasMedidas(): Promise<MedidaCorporal[]> {
   const db = await getDB();
-  const todas = await db.getAll('medidas');
-  
-  // Ordenar por fecha descendente
-  return todas.sort((a, b) =>
-    new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
-  );
+  return db.getAll('medidas') as any[];
 }
 
-// Obtener última medida
-export async function obtenerUltimaMedida(): Promise<MedidaCorporal | undefined> {
-  const medidas = await obtenerTodasMedidas();
-  return medidas.length > 0 ? medidas[0] : undefined;
+export async function obtenerMedidasPorFecha(): Promise<MedidaCorporal[]> {
+  const db = await getDB();
+  const todas = await db.getAllFromIndex('medidas', 'by-fecha');
+  return todas as any[];
 }
 
-// Actualizar medida
 export async function actualizarMedida(
   id: string,
   actualizaciones: Partial<Omit<MedidaCorporal, 'id' | 'creado_en'>>
 ): Promise<MedidaCorporal | undefined> {
   const db = await getDB();
-  
-  const medida = await db.get('medidas', id);
+
+  const medida = await obtenerMedida(id);
   if (!medida) return undefined;
 
   const medidaActualizada = {
@@ -56,61 +47,65 @@ export async function actualizarMedida(
     ...actualizaciones,
   };
 
-  await db.put('medidas', medidaActualizada);
+  await db.put('medidas', medidaActualizada as any);
   return medidaActualizada;
 }
 
-// Eliminar medida
 export async function eliminarMedida(id: string): Promise<boolean> {
   const db = await getDB();
-  
-  const medida = await db.get('medidas', id);
+
+  const medida = await obtenerMedida(id);
   if (!medida) return false;
 
   await db.delete('medidas', id);
   return true;
 }
 
-// Obtener medidas por rango de fechas
-export async function obtenerMedidasPorFecha(
-  fechaInicio: Date,
-  fechaFin: Date
-): Promise<MedidaCorporal[]> {
-  const medidas = await obtenerTodasMedidas();
-  
-  return medidas.filter((m) => {
-    const fecha = new Date(m.fecha);
-    return fecha >= fechaInicio && fecha <= fechaFin;
-  });
+export async function obtenerUltimaMedida(): Promise<MedidaCorporal | undefined> {
+  const todas = await obtenerTodasMedidas();
+
+  if (todas.length === 0) return undefined;
+
+  return todas.sort(
+    (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+  )[0];
 }
 
-// Calcular cambio de peso
-export async function calcularCambioOfPeso(): Promise<{
-  cambio: number;
-  porcentaje: number;
-  periodoSemanas: number;
-} | null> {
-  const medidas = await obtenerTodasMedidas();
-  
-  if (medidas.length < 2) return null;
-  
-  const ultimaMedida = medidas[0];
-  const primeraMedida = medidas[medidas.length - 1];
-  
-  const cambio = ultimaMedida.peso_kg - primeraMedida.peso_kg;
-  const porcentaje = (cambio / primeraMedida.peso_kg) * 100;
-  
-  const diasTranscurridos = Math.floor(
-    (new Date(ultimaMedida.fecha).getTime() - new Date(primeraMedida.fecha).getTime()) /
-      (1000 * 60 * 60 * 24)
+export async function obtenerProgresoPeso(): Promise<{
+  inicial: number | null;
+  actual: number | null;
+  diferencia: number | null;
+}> {
+  const todas = await obtenerTodasMedidas();
+
+  if (todas.length === 0) {
+    return { inicial: null, actual: null, diferencia: null };
+  }
+
+  const ordenadasPorFecha = todas.sort(
+    (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
   );
-  const periodoSemanas = Math.floor(diasTranscurridos / 7);
-  
-  return { cambio, porcentaje, periodoSemanas };
+
+  const primeraMedida = ordenadasPorFecha[0];
+  const ultimaMedida = ordenadasPorFecha[ordenadasPorFecha.length - 1];
+
+  if (!primeraMedida || !ultimaMedida) {
+    return { inicial: null, actual: null, diferencia: null };
+  }
+
+  return {
+    inicial: primeraMedida.peso_kg,
+    actual: ultimaMedida.peso_kg,
+    diferencia: ultimaMedida.peso_kg - primeraMedida.peso_kg,
+  };
 }
 
-// Obtener evolución de peso (últimas N medidas)
-export async function obtenerEvolucionPeso(ultimas: number = 10): Promise<MedidaCorporal[]> {
-  const medidas = await obtenerTodasMedidas();
-  return medidas.slice(0, ultimas).reverse(); // Ordenar de más antiguo a más reciente
+export async function obtenerSeriesPorFecha(fecha: Date): Promise<MedidaCorporal[]> {
+  const todas = await obtenerTodasMedidas();
+  const fechaStr = fecha.toISOString().split('T')[0];
+
+  return todas.filter((m) => {
+    const medidaFechaStr = new Date(m.fecha).toISOString().split('T')[0];
+    return medidaFechaStr === fechaStr;
+  });
 }

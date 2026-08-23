@@ -2,25 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Ejercicio } from '../tipos';
 import { getDB } from './init';
 
-// Interfaz interna para IndexedDB
-interface EjercicioDB extends Omit<Ejercicio, 'creado_en'> {
-  creado_en: string; // ISO string
-}
-
-function toDB(ejercicio: Ejercicio): EjercicioDB {
-  return {
-    ...ejercicio,
-    creado_en: ejercicio.creado_en.toISOString(),
-  };
-}
-
-function fromDB(data: EjercicioDB): Ejercicio {
-  return {
-    ...data,
-    creado_en: new Date(data.creado_en),
-  };
-}
-
 // Crear ejercicio
 export async function crearEjercicio(
   ejercicio: Omit<Ejercicio, 'id' | 'creado_en'>
@@ -33,11 +14,11 @@ export async function crearEjercicio(
     creado_en: new Date(),
   };
 
-  await db.add('ejercicios', toDB(nuevoEjercicio));
+  await db.add('ejercicios', nuevoEjercicio as any);
   return nuevoEjercicio;
 }
 
-// Obtener o crear un ejercicio por seed_id (IDEMPOTENTE)
+// Obtener o crear un ejercicio por seed_id
 export async function obtenerOCrearEjercicioPorSeedId(
   ejercicioData: Omit<Ejercicio, 'id' | 'creado_en'>
 ): Promise<Ejercicio> {
@@ -53,11 +34,10 @@ export async function obtenerOCrearEjercicioPorSeedId(
   return crearEjercicio(ejercicioData);
 }
 
-// Obtener un ejercicio por ID
+// Obtener un ejercicio
 export async function obtenerEjercicio(id: string): Promise<Ejercicio | undefined> {
   const db = await getDB();
-  const data = await db.get('ejercicios', id);
-  return data ? fromDB(data as EjercicioDB) : undefined;
+  return db.get('ejercicios', id) as any;
 }
 
 // Obtener ejercicio por seed_id
@@ -65,15 +45,14 @@ export async function obtenerEjercicioPorSeedId(
   seedId: string
 ): Promise<Ejercicio | undefined> {
   const db = await getDB();
-  const data = await db.getFromIndex('ejercicios', 'by-seed-id', seedId);
-  return data ? fromDB(data as EjercicioDB) : undefined;
+  return db.getFromIndex('ejercicios', 'by-seed-id', seedId) as any;
 }
 
 // Obtener todos los ejercicios
 export async function obtenerTodosEjercicios(): Promise<Ejercicio[]> {
   const db = await getDB();
   const datos = await db.getAll('ejercicios');
-  return datos.map((d) => fromDB(d as EjercicioDB));
+  return datos as any[];
 }
 
 // Actualizar ejercicio
@@ -91,7 +70,7 @@ export async function actualizarEjercicio(
     ...actualizaciones,
   };
 
-  await db.put('ejercicios', toDB(ejercicioActualizado));
+  await db.put('ejercicios', ejercicioActualizado as any);
   return ejercicioActualizado;
 }
 
@@ -106,7 +85,7 @@ export async function eliminarEjercicio(id: string): Promise<boolean> {
   return true;
 }
 
-// Buscar ejercicios por nombre
+// Buscar ejercicios
 export async function buscarEjercicios(nombre: string): Promise<Ejercicio[]> {
   const todos = await obtenerTodosEjercicios();
   return todos.filter((e) =>
@@ -114,104 +93,13 @@ export async function buscarEjercicios(nombre: string): Promise<Ejercicio[]> {
   );
 }
 
-// Obtener ejercicios por grupo muscular
-export async function obtenerEjerciciosPorGrupo(
-  grupo: string
-): Promise<Ejercicio[]> {
+// Obtener por grupo muscular
+export async function obtenerEjerciciosPorGrupo(grupo: string): Promise<Ejercicio[]> {
   const todos = await obtenerTodosEjercicios();
   return todos.filter((e) => e.grupo_muscular === grupo);
 }
 
-// Obtener ejercicios seedeados
-export async function obtenerEjerciciosSeedeatdos(): Promise<Ejercicio[]> {
-  const todos = await obtenerTodosEjercicios();
-  return todos.filter((e) => e.es_seedeado);
-}
-
-// Obtener ejercicios custom
-export async function obtenerEjerciciosCustom(): Promise<Ejercicio[]> {
-  const todos = await obtenerTodosEjercicios();
-  return todos.filter((e) => !e.es_seedeado);
-}
-
-// Obtener PR
+// PRs
 export async function obtenerPRPorEjercicio(ejercicioId: string): Promise<{ peso: number; fecha: Date } | null> {
   const db = await getDB();
-  const todas = await db.getAll('series');
-
-  const seriesDelEjercicio = todas.filter((s) => s.ejercicio_id === ejercicioId);
-
-  if (seriesDelEjercicio.length === 0) return null;
-
-  const conMayorPeso = seriesDelEjercicio.reduce((prev, current) =>
-    current.peso_kg > prev.peso_kg ? current : prev
-  );
-
-  return {
-    peso: conMayorPeso.peso_kg,
-    fecha: new Date(conMayorPeso.creado_en),
-  };
-}
-
-// Obtener todos los PRs
-export async function obtenerTodosPRs(): Promise<Array<{ ejercicio: Ejercicio; pr: number; fecha: Date }>> {
-  const ejercicios = await obtenerTodosEjercicios();
-  const db = await getDB();
-  const series = await db.getAll('series');
-
-  const prs: Array<{ ejercicio: Ejercicio; pr: number; fecha: Date }> = [];
-
-  for (const ejercicio of ejercicios) {
-    const seriesDelEjercicio = series.filter((s) => s.ejercicio_id === ejercicio.id);
-
-    if (seriesDelEjercicio.length > 0) {
-      const conMayorPeso = seriesDelEjercicio.reduce((prev, current) =>
-        current.peso_kg > prev.peso_kg ? current : prev
-      );
-
-      prs.push({
-        ejercicio,
-        pr: conMayorPeso.peso_kg,
-        fecha: new Date(conMayorPeso.creado_en),
-      });
-    }
-  }
-
-  return prs.sort((a, b) => b.pr - a.pr);
-}
-
-// Detectar si es nuevo PR
-export async function esNuevoPR(ejercicioId: string, peso: number): Promise<boolean> {
-  const pr = await obtenerPRPorEjercicio(ejercicioId);
-
-  if (!pr) return true;
-
-  return peso > pr.peso;
-}
-
-// Obtener historia de PRs
-export async function obtenerHistoriaPRs(ejercicioId: string, limit: number = 10): Promise<Array<{ peso: number; fecha: Date }>> {
-  const db = await getDB();
-  const todas = await db.getAll('series');
-
-  const seriesDelEjercicio = todas
-    .filter((s) => s.ejercicio_id === ejercicioId)
-    .sort((a, b) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime());
-
-  const prs: Array<{ peso: number; fecha: Date }> = [];
-  let pesoMaximo = 0;
-
-  for (const serie of seriesDelEjercicio) {
-    if (serie.peso_kg > pesoMaximo) {
-      pesoMaximo = serie.peso_kg;
-      prs.push({
-        peso: serie.peso_kg,
-        fecha: new Date(serie.creado_en),
-      });
-
-      if (prs.length >= limit) break;
-    }
-  }
-
-  return prs.reverse();
-}
+  const todas = await
