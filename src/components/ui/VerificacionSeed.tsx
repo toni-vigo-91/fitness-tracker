@@ -10,9 +10,9 @@ export default function VerificacionSeed() {
   const seedReady = useSeedReady();
   const [resultado, setResultado] = useState<string>('');
   const [cargando, setCargando] = useState(true);
+  const [mostrar, setMostrar] = useState(false);
 
   useEffect(() => {
-    // No hacer nada hasta que la seed esté lista
     if (!seedReady) {
       setCargando(true);
       return;
@@ -33,7 +33,6 @@ export default function VerificacionSeed() {
           detalles += `  • ${rutina.nombre} (${ejerciciosRutina.length} ejercicios)\n`;
         }
 
-        // Verificar superseries en Upper A
         const upperA = rutinas.find((r) => r.seed_id === 'upper-a');
         if (upperA) {
           const ejerciciosUpperA = await obtenerEjerciciosDERutina(upperA.id);
@@ -57,18 +56,25 @@ export default function VerificacionSeed() {
   }, [seedReady]);
 
   if (cargando || !seedReady) {
-    return (
-      <div className="card">
-        <p className="text-slate-400">Inicializando base de datos...</p>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="card bg-green-900/20 border-green-700">
-      <p className="text-white text-sm font-mono whitespace-pre-wrap">
-        {resultado}
-      </p>
+    <div className="space-y-2">
+      <button
+        onClick={() => setMostrar(!mostrar)}
+        className="text-xs text-slate-500 hover:text-slate-400 transition-colors underline"
+      >
+        {mostrar ? '▼' : '▶'} Ver estado de seed (desarrollo)
+      </button>
+
+      {mostrar && (
+        <div className="card bg-green-900/20 border-green-700">
+          <p className="text-white text-xs font-mono whitespace-pre-wrap">
+            {resultado}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
