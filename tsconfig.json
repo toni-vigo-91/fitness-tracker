@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "useDefineForEnumMembers": true,
     "lib": [
       "ES2017",
       "dom",
