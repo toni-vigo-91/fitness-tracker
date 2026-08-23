@@ -120,3 +120,88 @@ export async function obtenerEjerciciosCustom(): Promise<Ejercicio[]> {
   const todos = await db.getAll('ejercicios');
   return todos.filter((e) => !e.es_seedeado);
 }
+
+// Al final del archivo, agregar:
+
+// Obtener PR (peso máximo) de un ejercicio
+export async function obtenerPRPorEjercicio(ejercicioId: string): Promise<{ peso: number; fecha: Date } | null> {
+  const db = await getDB();
+  const todas = await db.getAll('series');
+  
+  const seriesDelEjercicio = todas.filter((s) => s.ejercicio_id === ejercicioId);
+  
+  if (seriesDelEjercicio.length === 0) return null;
+  
+  const conMayorPeso = seriesDelEjercicio.reduce((prev, current) =>
+    current.peso_kg > prev.peso_kg ? current : prev
+  );
+  
+  return {
+    peso: conMayorPeso.peso_kg,
+    fecha: new Date(conMayorPeso.creado_en),
+  };
+}
+
+// Obtener todos los PRs del usuario
+export async function obtenerTodosPRs(): Promise<Array<{ ejercicio: Ejercicio; pr: number; fecha: Date }>> {
+  const db = await getDB();
+  const ejercicios = await db.getAll('ejercicios');
+  const series = await db.getAll('series');
+  
+  const prs: Array<{ ejercicio: Ejercicio; pr: number; fecha: Date }> = [];
+  
+  for (const ejercicio of ejercicios) {
+    const seriesDelEjercicio = series.filter((s) => s.ejercicio_id === ejercicio.id);
+    
+    if (seriesDelEjercicio.length > 0) {
+      const conMayorPeso = seriesDelEjercicio.reduce((prev, current) =>
+        current.peso_kg > prev.peso_kg ? current : prev
+      );
+      
+      prs.push({
+        ejercicio,
+        pr: conMayorPeso.peso_kg,
+        fecha: new Date(conMayorPeso.creado_en),
+      });
+    }
+  }
+  
+  return prs.sort((a, b) => b.pr - a.pr);
+}
+
+// Detectar si una serie es un nuevo PR
+export async function esNuevoPR(ejercicioId: string, peso: number): Promise<boolean> {
+  const pr = await obtenerPRPorEjercicio(ejercicioId);
+  
+  if (!pr) return true; // Primera serie del ejercicio
+  
+  return peso > pr.peso;
+}
+
+// Obtener historia de PRs de un ejercicio (últimas 10 mejoras)
+export async function obtenerHistoriaPRs(ejercicioId: string, limit: number = 10): Promise<Array<{ peso: number; fecha: Date }>> {
+  const db = await getDB();
+  const todas = await db.getAll('series');
+  
+  const seriesDelEjercicio = todas
+    .filter((s) => s.ejercicio_id === ejercicioId)
+    .sort((a, b) => new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime());
+  
+  // Filtrar para obtener solo los máximos por período
+  const prs: Array<{ peso: number; fecha: Date }> = [];
+  let pesoMaximo = 0;
+  
+  for (const serie of seriesDelEjercicio) {
+    if (serie.peso_kg > pesoMaximo) {
+      pesoMaximo = serie.peso_kg;
+      prs.push({
+        peso: serie.peso_kg,
+        fecha: new Date(serie.creado_en),
+      });
+      
+      if (prs.length >= limit) break;
+    }
+  }
+  
+  return prs.reverse();
+}

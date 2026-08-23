@@ -8,6 +8,7 @@ const navItems = [
   { href: '/entrenamientos', label: 'Entrenamientos', icon: '🏋️' },
   { href: '/ejercicios', label: 'Ejercicios', icon: '📋' },
   { href: '/medidas', label: 'Medidas', icon: '📏' },
+  { href: '/prs', label: 'PRs', icon: '🏆' },
 ];
 
 export default function Navigation() {
