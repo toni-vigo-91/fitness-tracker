@@ -38,7 +38,7 @@ export async function obtenerTodosEntrenamientos(): Promise<Entrenamiento[]> {
 }
 
 // Obtener último entrenamiento
-export async function obtenerUltimoEntrenamiento(): Promise
+export async function obtenerUltimoEntrenamiento(): Promise<
   Entrenamiento | undefined
 > {
   const db = await getDB();
