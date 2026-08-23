@@ -9,7 +9,7 @@ interface DatosGrafico {
   peso: number;
 }
 
-export default function GraficoEvolucionPeso() {
+export default function GraficoEvolucionPeso(props?: any) {
   const [datos, setDatos] = useState<DatosGrafico[]>([]);
   const [cargando, setCargando] = useState(true);
 
@@ -54,8 +54,6 @@ export default function GraficoEvolucionPeso() {
 
   return (
     <div className="card">
-      <h3 className="text-lg font-bold mb-4">Evolución de Peso</h3>
-
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={datos}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(71, 85, 105, 0.5)" />
