@@ -1,22 +1,17 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { initializeSeed } from '@/lib/db/seed';
 
-// Context para rastrear estado de seed (simple implementación)
 let seedInitialized = false;
 let seedPromise: Promise<void> | null = null;
 
 export function useSeedReady(): boolean {
   const [ready, setReady] = useState(seedInitialized);
-
   useEffect(() => {
     if (seedInitialized) {
       setReady(true);
       return;
     }
-
-    // Esperar a que termine
     if (seedPromise) {
       seedPromise
         .then(() => {
@@ -30,25 +25,32 @@ export function useSeedReady(): boolean {
         });
     }
   }, []);
-
   return ready;
 }
 
 export default function SeedInitializer() {
+  console.log('[SeedInitializer] Componente montado');
+  
   useEffect(() => {
-    // Solo ejecutar una vez, globalmente
+    console.log('[SeedInitializer] useEffect ejecutado');
+    console.log('[SeedInitializer] seedInitialized:', seedInitialized);
+    console.log('[SeedInitializer] seedPromise:', seedPromise);
+    
     if (!seedInitialized && !seedPromise) {
+      console.log('[SeedInitializer] Iniciando seed...');
       seedPromise = initializeSeed()
         .then(() => {
+          console.log('[SeedInitializer] Seed completada');
           seedInitialized = true;
         })
         .catch((error) => {
-          console.error('Seed initialization failed:', error);
+          console.error('[SeedInitializer] Error en seed:', error);
           seedInitialized = false;
         });
+    } else {
+      console.log('[SeedInitializer] Seed ya en progreso o completada');
     }
   }, []);
-
-  // No renderiza nada visualmente
+  
   return null;
 }

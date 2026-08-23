@@ -2,19 +2,36 @@ import { v4 as uuidv4 } from 'uuid';
 import { Rutina } from '../tipos';
 import { getDB } from './init';
 
+// Interfaz interna para IndexedDB
+interface RutinaDB extends Omit<Rutina, 'creado_en'> {
+  creado_en: string; // ISO string
+}
+
+function toDB(rutina: Rutina): RutinaDB {
+  return {
+    ...rutina,
+    creado_en: rutina.creado_en.toISOString(),
+  };
+}
+
+function fromDB(data: RutinaDB): Rutina {
+  return {
+    ...data,
+    creado_en: new Date(data.creado_en),
+  };
+}
+
 // Crear rutina
 export async function crearRutina(
   rutina: Omit<Rutina, 'id' | 'creado_en'>
 ): Promise<Rutina> {
   const db = await getDB();
-
   const nuevaRutina: Rutina = {
     ...rutina,
     id: uuidv4(),
     creado_en: new Date(),
   };
-
-  await db.add('rutinas', nuevaRutina);
+  await db.add('rutinas', toDB(nuevaRutina));
   return nuevaRutina;
 }
 
@@ -23,30 +40,29 @@ export async function obtenerOCrearRutinaPorSeedId(
   rutinaData: Omit<Rutina, 'id' | 'creado_en'>
 ): Promise<Rutina> {
   if (!rutinaData.seed_id) {
-    // Si no tiene seed_id, crear una nueva
     return crearRutina(rutinaData);
   }
 
-  // Buscar si ya existe por seed_id
   const existente = await obtenerRutinaPorSeedId(rutinaData.seed_id);
   if (existente) {
     return existente;
   }
 
-  // Si no existe, crear una
   return crearRutina(rutinaData);
 }
 
 // Obtener una rutina
 export async function obtenerRutina(id: string): Promise<Rutina | undefined> {
   const db = await getDB();
-  return db.get('rutinas', id);
+  const data = await db.get('rutinas', id);
+  return data ? fromDB(data as RutinaDB) : undefined;
 }
 
 // Obtener todas las rutinas
 export async function obtenerTodasRutinas(): Promise<Rutina[]> {
   const db = await getDB();
-  return db.getAll('rutinas');
+  const datos = await db.getAll('rutinas');
+  return datos.map((d) => fromDB(d as RutinaDB));
 }
 
 // Obtener rutina por seed_id
@@ -54,7 +70,8 @@ export async function obtenerRutinaPorSeedId(
   seedId: string
 ): Promise<Rutina | undefined> {
   const db = await getDB();
-  return db.getFromIndex('rutinas', 'by-seed-id', seedId);
+  const data = await db.getFromIndex('rutinas', 'by-seed-id', seedId);
+  return data ? fromDB(data as RutinaDB) : undefined;
 }
 
 // Actualizar rutina
@@ -63,8 +80,7 @@ export async function actualizarRutina(
   actualizaciones: Partial<Omit<Rutina, 'id' | 'creado_en'>>
 ): Promise<Rutina | undefined> {
   const db = await getDB();
-
-  const rutina = await db.get('rutinas', id);
+  const rutina = await obtenerRutina(id);
   if (!rutina) return undefined;
 
   const rutinaActualizada = {
@@ -72,15 +88,14 @@ export async function actualizarRutina(
     ...actualizaciones,
   };
 
-  await db.put('rutinas', rutinaActualizada);
+  await db.put('rutinas', toDB(rutinaActualizada));
   return rutinaActualizada;
 }
 
 // Eliminar rutina
 export async function eliminarRutina(id: string): Promise<boolean> {
   const db = await getDB();
-
-  const rutina = await db.get('rutinas', id);
+  const rutina = await obtenerRutina(id);
   if (!rutina) return false;
 
   await db.delete('rutinas', id);
@@ -89,14 +104,12 @@ export async function eliminarRutina(id: string): Promise<boolean> {
 
 // Obtener rutinas seedeadas
 export async function obtenerRutinasSeedeatdas(): Promise<Rutina[]> {
-  const db = await getDB();
-  const todas = await db.getAll('rutinas');
+  const todas = await obtenerTodasRutinas();
   return todas.filter((r) => r.tipo === 'seed');
 }
 
 // Obtener rutinas custom
 export async function obtenerRutinasCustom(): Promise<Rutina[]> {
-  const db = await getDB();
-  const todas = await db.getAll('rutinas');
+  const todas = await obtenerTodasRutinas();
   return todas.filter((r) => r.tipo === 'custom');
 }

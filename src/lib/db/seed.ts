@@ -19,47 +19,50 @@ const CURRENT_SEED_VERSION = 1;
 const EXPECTED_EJERCICIOS = 32;
 const EXPECTED_RUTINAS = 4;
 
-// Variable global para rastrear si la seed está lista
 let seedReady = false;
 
 export function isSeedReady(): boolean {
   return seedReady;
 }
 
-// Verificar si la seed fue ejecutada Y validar que los datos existan
 async function verificarSeed(): Promise<boolean> {
   try {
+    console.log('[seed] Verificando seed...');
     const db = await getDB();
 
-    // Paso 1: Comprobar metadatos
     const metadata = await db.get('metadatos_db', 'fitness-db-metadata');
+    console.log('[seed] Metadata encontrada:', metadata);
+    
     if (!metadata || metadata.seed_version !== CURRENT_SEED_VERSION) {
+      console.log('[seed] Metadata no valida, re-ejecutando seed');
       return false;
     }
 
-    // Paso 2: Validar que existen los datos esperados
     const ejercicios = await obtenerTodosEjercicios();
     const rutinas = await obtenerTodasRutinas();
+
+    console.log(`[seed] Verificacion: ${ejercicios.length} ejercicios, ${rutinas.length} rutinas`);
 
     const ejerciciosOK = ejercicios.length === EXPECTED_EJERCICIOS;
     const rutinasOK = rutinas.length === EXPECTED_RUTINAS;
 
     if (!ejerciciosOK || !rutinasOK) {
       console.warn(
-        `⚠ Datos incompletos detectados. Ejercicios: ${ejercicios.length}/${EXPECTED_EJERCICIOS}, Rutinas: ${rutinas.length}/${EXPECTED_RUTINAS}`
+        `[seed] Datos incompletos. Ejercicios: ${ejercicios.length}/${EXPECTED_EJERCICIOS}, Rutinas: ${rutinas.length}/${EXPECTED_RUTINAS}`
       );
       return false;
     }
 
+    console.log('[seed] Seed valida');
     return true;
   } catch (error) {
-    console.log('Seed no encontrada o incompleta, ejecutando...');
+    console.log('[seed] Error en verificarSeed:', error);
     return false;
   }
 }
 
-// Registrar que la seed fue ejecutada
 async function marcarSeedCompleta(): Promise<void> {
+  console.log('[seed] Marcando seed como completa');
   const db = await getDB();
 
   const metadata: MetadatosDB = {
@@ -68,93 +71,100 @@ async function marcarSeedCompleta(): Promise<void> {
   };
 
   await db.put('metadatos_db', metadata);
+  console.log('[seed] Metadata guardada');
 }
 
-// Validar integridad de la seed después de crear
 async function validarIntegridad(): Promise<boolean> {
   try {
+    console.log('[seed] Validando integridad...');
     const ejercicios = await obtenerTodosEjercicios();
     const rutinas = await obtenerTodasRutinas();
 
     console.log(
-      `Validando: ${ejercicios.length} ejercicios, ${rutinas.length} rutinas`
+      `[seed] Integridad: ${ejercicios.length} ejercicios, ${rutinas.length} rutinas`
     );
 
     if (ejercicios.length !== EXPECTED_EJERCICIOS) {
       console.error(
-        `✗ Número incorrecto de ejercicios: ${ejercicios.length}/${EXPECTED_EJERCICIOS}`
+        `[seed] Ejercicios incorrectos: ${ejercicios.length}/${EXPECTED_EJERCICIOS}`
       );
       return false;
     }
 
     if (rutinas.length !== EXPECTED_RUTINAS) {
       console.error(
-        `✗ Número incorrecto de rutinas: ${rutinas.length}/${EXPECTED_RUTINAS}`
+        `[seed] Rutinas incorrectas: ${rutinas.length}/${EXPECTED_RUTINAS}`
       );
       return false;
     }
 
-    // Validar ejercicios de rutina
     for (const rutina of rutinas) {
       const ejerciciosDeRutina = await obtenerEjerciciosDERutina(rutina.id);
       if (ejerciciosDeRutina.length === 0) {
-        console.error(`✗ Rutina sin ejercicios: ${rutina.nombre}`);
+        console.error(`[seed] Rutina sin ejercicios: ${rutina.nombre}`);
         return false;
       }
     }
 
+    console.log('[seed] Integridad OK');
     return true;
   } catch (error) {
-    console.error('✗ Error en validación de integridad:', error);
+    console.error('[seed] Error en validacion:', error);
     return false;
   }
 }
 
-// FUNCIÓN PRINCIPAL DE SEED (BLOQUEANTE E IDEMPOTENTE)
 export async function initializeSeed(): Promise<void> {
+  console.log('[seed] Iniciando initializeSeed()');
   seedReady = false;
 
-  // Verificar si ya fue ejecutada correctamente
   const yaFueEjecutada = await verificarSeed();
   if (yaFueEjecutada) {
-    console.log('✓ Seed ya fue ejecutada correctamente. Saltando...');
+    console.log('[seed] Seed ya ejecutada, saltando');
     seedReady = true;
     return;
   }
 
-  console.log('→ Ejecutando seed inicial...');
+  console.log('[seed] Ejecutando seed inicial');
 
   try {
-    // PASO 1: Obtener o crear ejercicios seedeados (IDEMPOTENTE)
-    console.log('→ Procesando ejercicios...');
-    const ejerciciosMap: Record<string, string> = {}; // seed_id -> id real
+    console.log('[seed] Paso 1: Procesando ejercicios');
+    const ejerciciosMap: Record<string, string> = {};
 
     for (const ejercicioData of ejerciciosSeed) {
-      const ejercicio = await obtenerOCrearEjercicioPorSeedId(ejercicioData);
-      if (ejercicioData.seed_id) {
-        ejerciciosMap[ejercicioData.seed_id] = ejercicio.id;
+      try {
+        const ejercicio = await obtenerOCrearEjercicioPorSeedId(ejercicioData);
+        if (ejercicioData.seed_id) {
+          ejerciciosMap[ejercicioData.seed_id] = ejercicio.id;
+        }
+      } catch (err) {
+        console.error('[seed] Error procesando ejercicio:', ejercicioData.nombre, err);
+        throw err;
       }
     }
 
     const ejerciciosTotal = await obtenerTodosEjercicios();
-    console.log(`✓ ${ejerciciosTotal.length} ejercicios (creados o reutilizados)`);
+    console.log(`[seed] Paso 1 OK: ${ejerciciosTotal.length} ejercicios`);
 
-    // PASO 2: Obtener o crear rutinas seedeadas (IDEMPOTENTE)
-    console.log('→ Procesando rutinas...');
-    const rutinasMap: Record<string, string> = {}; // seed_id -> id real
+    console.log('[seed] Paso 2: Procesando rutinas');
+    const rutinasMap: Record<string, string> = {};
 
     for (const rutinaData of rutinasSeed) {
-      const rutina = await obtenerOCrearRutinaPorSeedId(rutinaData);
-      if (rutinaData.seed_id) {
-        rutinasMap[rutinaData.seed_id] = rutina.id;
+      try {
+        const rutina = await obtenerOCrearRutinaPorSeedId(rutinaData);
+        if (rutinaData.seed_id) {
+          rutinasMap[rutinaData.seed_id] = rutina.id;
+        }
+      } catch (err) {
+        console.error('[seed] Error procesando rutina:', rutinaData.nombre, err);
+        throw err;
       }
     }
 
     const rutinasTotal = await obtenerTodasRutinas();
-    console.log(`✓ ${rutinasTotal.length} rutinas (creadas o reutilizadas)`);
+    console.log(`[seed] Paso 2 OK: ${rutinasTotal.length} rutinas`);
 
-    // PASO 3: Obtener o crear ejercicios de rutina (vincular ejercicios con rutinas) (IDEMPOTENTE)
-    console.log('→ Procesando relaciones ejercicio-rutina...');
+    console.log('[seed] Paso 3: Procesando relaciones');
     let totalEjerciciosRutina = 0;
 
     for (const [rutinaSeedId, ejerciciosConfig] of Object.entries(
@@ -162,15 +172,13 @@ export async function initializeSeed(): Promise<void> {
     )) {
       const rutinaId = rutinasMap[rutinaSeedId];
       if (!rutinaId) {
-        throw new Error(`Rutina no encontrada en map: ${rutinaSeedId}`);
+        throw new Error(`Rutina no encontrada: ${rutinaSeedId}`);
       }
 
       for (const config of ejerciciosConfig) {
         const ejercicioId = ejerciciosMap[config.ejercicio_seed_id];
         if (!ejercicioId) {
-          throw new Error(
-            `Ejercicio no encontrado en map: ${config.ejercicio_seed_id}`
-          );
+          throw new Error(`Ejercicio no encontrado: ${config.ejercicio_seed_id}`);
         }
 
         await obtenerOCrearEjercicioDeRutina({
@@ -187,25 +195,22 @@ export async function initializeSeed(): Promise<void> {
       }
     }
 
-    console.log(
-      `✓ ${totalEjerciciosRutina} relaciones procesadas (creadas o reutilizadas)`
-    );
+    console.log(`[seed] Paso 3 OK: ${totalEjerciciosRutina} relaciones`);
 
-    // PASO 4: Validar que todo se creó correctamente
-    console.log('→ Validando integridad de datos...');
+    console.log('[seed] Paso 4: Validando integridad');
     const integridadOK = await validarIntegridad();
     if (!integridadOK) {
-      throw new Error('Falló la validación de integridad');
+      throw new Error('Validacion de integridad fallo');
     }
 
-    // PASO 5: Marcar seed como completa
+    console.log('[seed] Paso 5: Marcando completa');
     await marcarSeedCompleta();
 
-    console.log('✓ Seed completada exitosamente');
+    console.log('[seed] SEED COMPLETADA EXITOSAMENTE');
     seedReady = true;
   } catch (error) {
-    console.error('✗ Error durante seed:', error);
-    seedReady = false; // Marcar como no lista si falla
+    console.error('[seed] ERROR FATAL:', error);
+    seedReady = false;
     throw error;
   }
 }
