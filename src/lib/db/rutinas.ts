@@ -2,25 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Rutina } from '../tipos';
 import { getDB } from './init';
 
-// Interfaz interna para IndexedDB
-interface RutinaDB extends Omit<Rutina, 'creado_en'> {
-  creado_en: string; // ISO string
-}
-
-function toDB(rutina: Rutina): RutinaDB {
-  return {
-    ...rutina,
-    creado_en: rutina.creado_en.toISOString(),
-  };
-}
-
-function fromDB(data: RutinaDB): Rutina {
-  return {
-    ...data,
-    creado_en: new Date(data.creado_en),
-  };
-}
-
 // Crear rutina
 export async function crearRutina(
   rutina: Omit<Rutina, 'id' | 'creado_en'>
@@ -31,7 +12,7 @@ export async function crearRutina(
     id: uuidv4(),
     creado_en: new Date(),
   };
-  await db.add('rutinas', toDB(nuevaRutina));
+  await db.add('rutinas', nuevaRutina as unknown as any);
   return nuevaRutina;
 }
 
@@ -55,14 +36,14 @@ export async function obtenerOCrearRutinaPorSeedId(
 export async function obtenerRutina(id: string): Promise<Rutina | undefined> {
   const db = await getDB();
   const data = await db.get('rutinas', id);
-  return data ? fromDB(data as RutinaDB) : undefined;
+  return data as Rutina | undefined;
 }
 
 // Obtener todas las rutinas
 export async function obtenerTodasRutinas(): Promise<Rutina[]> {
   const db = await getDB();
   const datos = await db.getAll('rutinas');
-  return datos.map((d) => fromDB(d as RutinaDB));
+  return datos as Rutina[];
 }
 
 // Obtener rutina por seed_id
@@ -71,7 +52,7 @@ export async function obtenerRutinaPorSeedId(
 ): Promise<Rutina | undefined> {
   const db = await getDB();
   const data = await db.getFromIndex('rutinas', 'by-seed-id', seedId);
-  return data ? fromDB(data as RutinaDB) : undefined;
+  return data as Rutina | undefined;
 }
 
 // Actualizar rutina
@@ -88,7 +69,7 @@ export async function actualizarRutina(
     ...actualizaciones,
   };
 
-  await db.put('rutinas', toDB(rutinaActualizada));
+  await db.put('rutinas', rutinaActualizada as unknown as any);
   return rutinaActualizada;
 }
 
