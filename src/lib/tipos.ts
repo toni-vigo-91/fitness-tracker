@@ -1,5 +1,4 @@
-// Tipos principales de la aplicación
-
+// Ejercicio de la biblioteca
 export interface Ejercicio {
   id: string;
   nombre: string;
@@ -8,9 +7,51 @@ export interface Ejercicio {
   tipo_ejercicio: 'compound' | 'isolation' | 'cardio';
   equipamiento: string;
   notas?: string;
+  
+  // Para idempotencia de seed
+  es_seedeado: boolean;
+  seed_id?: string;
+  
   creado_en: Date;
 }
 
+// Plantilla/rutina de entrenamiento
+export interface Rutina {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  tipo: 'custom' | 'seed';
+  seed_id?: string;
+  notas?: string;
+  creado_en: Date;
+}
+
+// Relación entre rutina y ejercicio
+export interface EjercicioDeRutina {
+  id: string;
+  rutina_id: string;
+  ejercicio_id: string;
+  orden: number;
+  series_objetivo: number;
+  repeticiones_objetivo: number;
+  grupo_superserie?: string; // Ej: "ss-1"
+  notas?: string;
+  creado_en: Date;
+}
+
+// Sesión de entrenamiento realizada
+export interface Entrenamiento {
+  id: string;
+  nombre: string;
+  fecha: Date;
+  rutina_id?: string; // FK a la rutina que origino este entrenamiento
+  duracion_minutos?: number;
+  notas?: string;
+  completado: boolean;
+  creado_en: Date;
+}
+
+// Serie realizada en un entrenamiento
 export interface Serie {
   id: string;
   entrenamiento_id: string;
@@ -24,17 +65,7 @@ export interface Serie {
   creado_en: Date;
 }
 
-export interface Entrenamiento {
-  id: string;
-  nombre: string;
-  fecha: Date;
-  duracion_minutos?: number;
-  notas?: string;
-  completado: boolean;
-  series: Serie[];
-  creado_en: Date;
-}
-
+// Medida corporal registrada
 export interface MedidaCorporal {
   id: string;
   fecha: Date;
@@ -47,4 +78,10 @@ export interface MedidaCorporal {
   grasa_corporal_pct?: number;
   notas?: string;
   creado_en: Date;
+}
+
+// Metadatos de la BD (para versionado de seed)
+export interface MetadatosDB {
+  id: string; // Siempre "fitness-db-metadata"
+  seed_version: number;
 }
