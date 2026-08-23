@@ -9,6 +9,7 @@ const navItems = [
   { href: '/ejercicios', label: 'Ejercicios', icon: '📋' },
   { href: '/medidas', label: 'Medidas', icon: '📏' },
   { href: '/prs', label: 'PRs', icon: '🏆' },
+  { href: '/perfil', label: 'Perfil', icon: '⚙️' },
 ];
 
 export default function Navigation() {

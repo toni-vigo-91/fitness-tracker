@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import '../styles/globals.css';
 import Header from '@/components/layout/Header';
-import Navigation from '@/components/layout/Navigation';
+import NavigationWrapper from '@/components/layout/NavigationWrapper';
 import SeedInitializer from '@/components/ui/SeedInitializer';
 import PWAInstaller from '@/components/pwa/PWAInstaller';
 
@@ -56,7 +56,7 @@ export default function RootLayout({
         <main className="flex-1 pb-20 md:pb-0">
           {children}
         </main>
-        <Navigation />
+        <NavigationWrapper />
       </body>
     </html>
   );

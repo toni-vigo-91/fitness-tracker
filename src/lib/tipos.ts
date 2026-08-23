@@ -85,3 +85,20 @@ export interface MetadatosDB {
   id: string; // Siempre "fitness-db-metadata"
   seed_version: number;
 }
+
+// Agregar al final del archivo:
+
+export interface PerfilUsuario {
+  id: string; // Siempre 'profile'
+  nombre: string;
+  edad?: number;
+  peso_objetivo_kg?: number;
+  unidades: 'kg' | 'lbs';
+  idioma: 'es' | 'en';
+  notificaciones_activas: boolean;
+  tema: 'dark' | 'light';
+  objetivo_semanal_entrenamientos?: number;
+  foto_url?: string;
+  creado_en: Date;
+  actualizado_en: Date;
+}
