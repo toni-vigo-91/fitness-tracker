@@ -1,0 +1,82 @@
+{
+  "name": "Fitness Tracker - Tu evolución en entrenamientos",
+  "short_name": "Fitness Tracker",
+  "description": "Aplicación para registrar entrenamientos, medidas corporales y seguir tu progreso de forma profesional",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0f172a",
+  "background_color": "#ffffff",
+  "categories": ["fitness", "health"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Pantalla principal"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Entrenamientos"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuevo entrenamiento",
+      "short_name": "Entrenar",
+      "description": "Inicia un nuevo entrenamiento",
+      "url": "/entrenamientos/nuevo",
+      "icons": [
+        {
+          "src": "/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Registrar medida",
+      "short_name": "Medida",
+      "description": "Registra tu peso y medidas",
+      "url": "/medidas",
+      "icons": [
+        {
+          "src": "/icon-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
